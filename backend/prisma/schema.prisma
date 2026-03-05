@@ -11,10 +11,11 @@ model User {
   id    Int     @id @default(autoincrement()) 
   email String  @unique
   name  String?
-  posts Post[]
+  username String
+  reviews Review[]
 } 
 
-model Post { 
+model Review { 
   id        Int     @id @default(autoincrement()) 
   title     String
   content   String?
