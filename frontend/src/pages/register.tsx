@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import React from "react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ export default function Register() {
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -33,7 +35,11 @@ export default function Register() {
         body: JSON.stringify(formData),
       }
     );
-    console.log(res);
+    if (res.ok) {
+      navigate("/feed");
+    } else {
+      console.error("Registration failed");
+    }
   };
 
   return (

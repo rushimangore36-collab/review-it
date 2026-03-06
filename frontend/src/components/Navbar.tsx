@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, Bell, Moon, Sun, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,7 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 export function Navbar() {
   const [isDark, setIsDark] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
@@ -15,6 +17,7 @@ export function Navbar() {
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
+    check();
   }, []);
 
   const isLanding = location.pathname === "/";
@@ -24,6 +27,35 @@ export function Navbar() {
     { label: "Explore", to: "/explore" },
     { label: "Write", to: "/write" },
   ];
+
+  const check = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/auth/check`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+      const data = await res.json();
+      setIsLoggedIn(data.authenticated);
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      setIsLoggedIn(false);
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+    navigate("/");
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass">
@@ -78,17 +110,30 @@ export function Navbar() {
             {!isLanding && (
               <>
                 {/* Auth buttons */}
-                <div className="hidden md:flex items-center gap-2">
-                  <Link to="/auth/login">
-                    <Button variant="ghost" className="rounded-xl text-sm">
-                      Login
-                    </Button>
+                {isLoggedIn ? (
+                  <Link
+                    to="/"
+                    className="px-2 py-1 text-sm font-medium text-red-500 border border-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all duration-200"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      logout();
+                    }}
+                  >
+                    Logout
                   </Link>
+                ) : (
+                  <div className="hidden md:flex items-center gap-2">
+                    <Link to="/auth/login">
+                      <Button variant="ghost" className="rounded-xl text-sm">
+                        Login
+                      </Button>
+                    </Link>
 
-                  <Link to="/auth/register">
-                    <Button className="rounded-xl text-sm">Register</Button>
-                  </Link>
-                </div>
+                    <Link to="/auth/register">
+                      <Button className="rounded-xl text-sm">Register</Button>
+                    </Link>
+                  </div>
+                )}
 
                 {/* Notifications */}
                 <Button
@@ -156,21 +201,36 @@ export function Navbar() {
               {/* Auth links */}
               {!isLanding && (
                 <div className="pt-2 border-t border-border mt-2 space-y-2">
-                  <Link
-                    to="/auth/login"
-                    onClick={() => setMobileOpen(false)}
-                    className="block px-4 py-2 rounded-lg text-sm hover:bg-accent"
-                  >
-                    Login
-                  </Link>
+                  {isLoggedIn ? (
+                    <Link
+                      to="/"
+                      className="px-2 py-1 text-sm font-medium text-red-500 border border-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all duration-200"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        logout();
+                      }}
+                    >
+                      Logout
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        to="/auth/login"
+                        onClick={() => setMobileOpen(false)}
+                        className="block px-4 py-2 rounded-lg text-sm hover:bg-accent"
+                      >
+                        Login
+                      </Link>
 
-                  <Link
-                    to="/auth/register"
-                    onClick={() => setMobileOpen(false)}
-                    className="block px-4 py-2 rounded-lg text-sm hover:bg-accent"
-                  >
-                    Register
-                  </Link>
+                      <Link
+                        to="/auth/register"
+                        onClick={() => setMobileOpen(false)}
+                        className="block px-4 py-2 rounded-lg text-sm hover:bg-accent"
+                      >
+                        Register
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
             </div>

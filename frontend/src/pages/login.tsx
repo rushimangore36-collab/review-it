@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import React from "react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,6 +30,7 @@ export default function Login() {
       },
       body: JSON.stringify(formData),
     });
+    navigate("/feed");
   };
 
   return (

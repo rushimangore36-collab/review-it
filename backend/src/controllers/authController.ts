@@ -20,7 +20,8 @@ export async function register(req: Request, res: Response) {
       data: {
         email,
         name,
-        password: hashedPassword,
+        // password: hashedPassword,
+        password,
         username,
       },
     });
@@ -53,7 +54,11 @@ export async function login(req: Request, res: Response) {
   const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
     expiresIn: "7d",
   });
-  res.cookie("token", token, { httpOnly: true, secure: true });
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
   res.status(200).json({ message: "Login successful" });
 }
 
@@ -76,4 +81,9 @@ export async function check(req: Request, res: Response) {
   } catch (error) {
     res.status(401).json({ error: "Unauthorized" });
   }
+}
+
+export async function logout(req: Request, res: Response) {
+  res.clearCookie("token");
+  res.status(200).json({ message: "Logout successful" });
 }
