@@ -14,7 +14,6 @@ export function Navbar() {
   }, [isDark]);
 
   useEffect(() => {
-    // Default to dark
     document.documentElement.classList.add("dark");
   }, []);
 
@@ -33,12 +32,14 @@ export function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center">
-              <span className="text-sm font-bold text-primary-foreground">R</span>
+              <span className="text-sm font-bold text-primary-foreground">
+                R
+              </span>
             </div>
             <span className="font-display font-bold text-lg">ReviewSphere</span>
           </Link>
 
-          {/* Desktop nav */}
+          {/* Desktop navigation */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
@@ -55,19 +56,50 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Right side */}
+          {/* Right section */}
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="rounded-xl">
               <Search className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setIsDark(!isDark)}>
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-xl"
+              onClick={() => setIsDark(!isDark)}
+            >
+              {isDark ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
             </Button>
+
             {!isLanding && (
               <>
-                <Button variant="ghost" size="icon" className="rounded-xl hidden md:flex">
+                {/* Auth buttons */}
+                <div className="hidden md:flex items-center gap-2">
+                  <Link to="/auth/login">
+                    <Button variant="ghost" className="rounded-xl text-sm">
+                      Login
+                    </Button>
+                  </Link>
+
+                  <Link to="/auth/register">
+                    <Button className="rounded-xl text-sm">Register</Button>
+                  </Link>
+                </div>
+
+                {/* Notifications */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-xl hidden md:flex"
+                >
                   <Bell className="w-4 h-4" />
                 </Button>
+
+                {/* Profile */}
                 <Link to="/profile">
                   <img
                     src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face"
@@ -77,13 +109,19 @@ export function Navbar() {
                 </Link>
               </>
             )}
+
+            {/* Mobile menu button */}
             <Button
               variant="ghost"
               size="icon"
               className="md:hidden rounded-xl"
               onClick={() => setMobileOpen(!mobileOpen)}
             >
-              {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              {mobileOpen ? (
+                <X className="w-4 h-4" />
+              ) : (
+                <Menu className="w-4 h-4" />
+              )}
             </Button>
           </div>
         </div>
@@ -99,6 +137,7 @@ export function Navbar() {
             className="md:hidden glass border-t border-border"
           >
             <div className="container mx-auto px-4 py-4 space-y-2">
+              {/* Navigation links */}
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
@@ -113,6 +152,27 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
+
+              {/* Auth links */}
+              {!isLanding && (
+                <div className="pt-2 border-t border-border mt-2 space-y-2">
+                  <Link
+                    to="/auth/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-4 py-2 rounded-lg text-sm hover:bg-accent"
+                  >
+                    Login
+                  </Link>
+
+                  <Link
+                    to="/auth/register"
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-4 py-2 rounded-lg text-sm hover:bg-accent"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

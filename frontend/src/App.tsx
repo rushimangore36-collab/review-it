@@ -9,6 +9,8 @@ import ItemDetail from "./pages/ItemDetail";
 import Profile from "./pages/Profile";
 import WriteReview from "./pages/WriteReview";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/login";
+import Register from "./pages/register";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/item/:id" element={<ItemDetail />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/write" element={<WriteReview />} />
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
