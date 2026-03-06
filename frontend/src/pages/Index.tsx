@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import React from "react";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 const categories = [
   {
@@ -137,32 +136,6 @@ const fadeUp = {
 };
 
 export default function Landing() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkAuthAndRedirect = async () => {
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/auth/check`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-
-        const data = await res.json();
-
-        if (data.authenticated) {
-          navigate("/feed");
-        }
-      } catch (err) {
-        console.error("Auth check failed:", err);
-      }
-    };
-
-    checkAuthAndRedirect();
-  }, []);
-
   return (
     <div className="min-h-screen gradient-hero">
       <Navbar />
@@ -217,7 +190,7 @@ export default function Landing() {
               size="lg"
               className="rounded-xl px-8"
             >
-              <Link to="/feed">Join Community</Link>
+              <Link to="/auth/register">Join Community</Link>
             </Button>
           </motion.div>
         </div>
