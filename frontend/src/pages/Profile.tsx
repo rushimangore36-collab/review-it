@@ -61,7 +61,7 @@ export default function Profile() {
 
   const getProfile = async () => {
     try {
-      const res = await fetch("http://localhost:5000/profile", {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/profile`, {
         method: "GET",
         credentials: "include",
       });

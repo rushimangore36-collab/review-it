@@ -20,7 +20,7 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const res = fetch("http://localhost:5000/auth/login", {
+    const res = fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, {
       method: "POST",
       credentials: "include",
       headers: {

@@ -56,3 +56,24 @@ export async function login(req: Request, res: Response) {
   res.cookie("token", token, { httpOnly: true, secure: true });
   res.status(200).json({ message: "Login successful" });
 }
+
+export async function check(req: Request, res: Response) {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+      userId: number;
+    };
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+    });
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    res.status(200).json({ authenticated: true });
+  } catch (error) {
+    res.status(401).json({ error: "Unauthorized" });
+  }
+}

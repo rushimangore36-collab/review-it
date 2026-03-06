@@ -36,7 +36,7 @@ export function Navbar() {
                 R
               </span>
             </div>
-            <span className="font-display font-bold text-lg">ReviewSphere</span>
+            <span className="font-display font-bold text-lg">ReviewIt</span>
           </Link>
 
           {/* Desktop navigation */}
