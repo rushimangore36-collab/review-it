@@ -8,22 +8,22 @@ type Category = "books" | "movies" | "series" | "courses";
 
 interface ReviewCardProps {
   id?: string;
-  coverImage: string;
+  name: string;
   title: string;
   category: Category;
   rating: number;
-  reviewText: string;
-  author: { name: string; avatar: string };
-  likes: number;
-  comments: number;
+  description: string;
+  author: { name: string };
+  likes?: number;
+  comments?: number;
 }
 
 export function ReviewCard({
-  coverImage,
   title,
+  name,
   category,
   rating,
-  reviewText,
+  description,
   author,
   likes,
   comments,
@@ -35,36 +35,22 @@ export function ReviewCard({
       transition={{ duration: 0.4 }}
       className="group bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
     >
-      <div className="relative aspect-[16/9] overflow-hidden">
-        <img
-          src={coverImage}
-          alt={title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-        <div className="absolute top-3 left-3">
-          <CategoryBadge category={category} />
-        </div>
-      </div>
-
       <div className="p-4 space-y-3">
+        <div className="text-lg font-semibold text-white tracking-wide">
+          {name}
+        </div>
         <div className="flex items-start justify-between gap-2">
-          <Link to="/item/1" className="font-display font-semibold text-lg leading-tight hover:text-primary transition-colors line-clamp-1">
-            {title}
-          </Link>
+          {title}
+
           <StarRating rating={rating} size="sm" />
         </div>
 
         <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-          {reviewText}
+          {description}
         </p>
 
         <div className="flex items-center justify-between pt-2 border-t border-border">
           <div className="flex items-center gap-2">
-            <img
-              src={author.avatar}
-              alt={author.name}
-              className="w-6 h-6 rounded-full object-cover"
-            />
             <span className="text-sm font-medium">{author.name}</span>
           </div>
 

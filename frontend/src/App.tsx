@@ -29,6 +29,7 @@ const App = () => (
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/reviews/:id" element={<ItemDetail />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

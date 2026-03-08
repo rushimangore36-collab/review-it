@@ -20,8 +20,7 @@ export async function register(req: Request, res: Response) {
       data: {
         email,
         name,
-        // password: hashedPassword,
-        password,
+        password: hashedPassword,
         username,
       },
     });
@@ -32,6 +31,7 @@ export async function register(req: Request, res: Response) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
@@ -58,6 +58,7 @@ export async function login(req: Request, res: Response) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
   res.status(200).json({ message: "Login successful" });
 }
