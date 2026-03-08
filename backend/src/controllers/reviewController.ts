@@ -1,9 +1,19 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
+import jwt from "jsonwebtoken";
 
 export const createReview = async (req: Request, res: Response) => {
   try {
-    const { category, name, title, rating, description, authorId } = req.body;
+    const { category, name, title, rating, description } = req.body;
+    const token = req.cookies.token;
+
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+      userId: number;
+    };
+
+    const authorId = decoded.userId;
+
     const review = await prisma.review.create({
       data: {
         category,

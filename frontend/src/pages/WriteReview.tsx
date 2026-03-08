@@ -15,6 +15,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import { Search, Send } from "lucide-react";
+import { a } from "vitest/dist/chunks/suite.d.FvehnV49.js";
 
 export default function WriteReview() {
   const [formData, setFormData] = useState({
@@ -23,6 +24,7 @@ export default function WriteReview() {
     rating: 0,
     title: "",
     description: "",
+    authorId: 0,
   });
 
   const handleSubmit = async () => {
@@ -39,6 +41,7 @@ export default function WriteReview() {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify(reviewData),
     });
 

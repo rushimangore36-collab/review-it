@@ -9,41 +9,6 @@ import { MapPin, Calendar, Link as LinkIcon } from "lucide-react";
 import React from "react";
 import { useEffect, useState } from "react";
 
-const profileReviews = [
-  {
-    coverImage:
-      "https://images.unsplash.com/photo-1534809027769-b00d750a6bac?w=600&h=340&fit=crop",
-    title: "Dune: Part Three — A Visual Masterpiece",
-    category: "movies" as const,
-    rating: 5,
-    reviewText:
-      "Villeneuve has outdone himself yet again. The third installment brings the saga to a breathtaking conclusion.",
-    author: {
-      name: "Sarah Chen",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
-    },
-    likes: 234,
-    comments: 45,
-  },
-  {
-    coverImage:
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=600&h=340&fit=crop",
-    title: "The Midnight Library — A Comfort Read",
-    category: "books" as const,
-    rating: 4,
-    reviewText:
-      "A thoughtful exploration of parallel lives. Heartwarming and deeply personal.",
-    author: {
-      name: "Sarah Chen",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
-    },
-    likes: 189,
-    comments: 32,
-  },
-];
-
 const stats = [
   { label: "Reviews", value: "342" },
   { label: "Followers", value: "1.2K" },
@@ -51,9 +16,21 @@ const stats = [
   { label: "Avg Rating", value: "4.3" },
 ];
 
+type Category = "books" | "movies" | "series" | "courses";
+
 export default function Profile() {
   const [name, setName] = useState("Sarah Chen");
   const [username, setUsername] = useState("@sarahchen");
+  const [profileReviews, setProfileReviews] = useState([
+    {
+      category: "books" as Category,
+      name: "",
+      rating: 0,
+      title: "",
+      description: "",
+      author: { name: "" },
+    },
+  ]);
 
   useEffect(() => {
     getProfile();
