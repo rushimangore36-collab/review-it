@@ -10,18 +10,12 @@ import { MapPin, Calendar, Link as LinkIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-const stats = [
-  { label: "Reviews", value: "342" },
-  { label: "Followers", value: "1.2K" },
-  { label: "Following", value: "489" },
-  { label: "Avg Rating", value: "4.3" },
-];
-
 type Category = "books" | "movies" | "series" | "courses";
 
 export default function Profile() {
   const [name, setName] = useState("Sarah Chen");
   const [username, setUsername] = useState("@sarahchen");
+  const [noOfReviews, setNoOfReviews] = useState(0);
   const [profileReviews, setProfileReviews] = useState<
     {
       id: number;
@@ -40,6 +34,13 @@ export default function Profile() {
     getProfile();
     getUserReviews();
   }, []);
+
+  const stats = [
+    { label: "Reviews", value: noOfReviews.toString() },
+    { label: "Followers", value: "1.2K" },
+    { label: "Following", value: "489" },
+    { label: "Avg Rating", value: "4.3" },
+  ];
 
   const getProfile = async () => {
     try {
@@ -65,7 +66,7 @@ export default function Profile() {
         }
       );
       const data = await res.json();
-
+      setNoOfReviews(data.length);
       setProfileReviews(data);
     } catch (error) {
       console.error("Error fetching reviews:", error);
