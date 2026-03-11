@@ -34,20 +34,47 @@ export const createReview = async (req: Request, res: Response) => {
 };
 export const getReviews = async (req: Request, res: Response) => {
   try {
-    const reviews = await prisma.review.findMany({
-      select: {
-        id: true,
-        category: true,
-        name: true,
-        title: true,
-        rating: true,
-        description: true,
-        author: {
-          select: { name: true },
+    const action = req.query.action as string;
+
+    if (action === "getUserReviews") {
+      const token = req.cookies.token;
+      if (!token) return res.status(401).json({ error: "Unauthorized" });
+      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+        userId: number;
+      };
+      const userId = decoded.userId;
+      const userReviews = await prisma.review.findMany({
+        where: { authorId: userId },
+        select: {
+          id: true,
+          category: true,
+          name: true,
+          title: true,
+          rating: true,
+          description: true,
+          author: {
+            select: { name: true },
+          },
         },
-      },
-    });
-    res.status(200).json(reviews);
+      });
+
+      res.status(200).json(userReviews);
+    } else {
+      const reviews = await prisma.review.findMany({
+        select: {
+          id: true,
+          category: true,
+          name: true,
+          title: true,
+          rating: true,
+          description: true,
+          author: {
+            select: { name: true },
+          },
+        },
+      });
+      res.status(200).json(reviews);
+    }
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }

@@ -1,12 +1,13 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ReviewCard } from "@/components/ReviewCard";
-import { StarRating } from "@/components/StarRating";
+import { CategoryBadge } from "@/components/CategoryBadge";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { MapPin, Calendar, Link as LinkIcon } from "lucide-react";
-import React from "react";
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 const stats = [
@@ -21,19 +22,23 @@ type Category = "books" | "movies" | "series" | "courses";
 export default function Profile() {
   const [name, setName] = useState("Sarah Chen");
   const [username, setUsername] = useState("@sarahchen");
-  const [profileReviews, setProfileReviews] = useState([
+  const [profileReviews, setProfileReviews] = useState<
     {
-      category: "books" as Category,
-      name: "",
-      rating: 0,
-      title: "",
-      description: "",
-      author: { name: "" },
-    },
-  ]);
+      id: number;
+      category: Category;
+      name: string;
+      rating: number;
+      title: string;
+      description: string;
+      author: { name: string };
+      likes?: number;
+      comments?: number;
+    }[]
+  >([]);
 
   useEffect(() => {
     getProfile();
+    getUserReviews();
   }, []);
 
   const getProfile = async () => {
@@ -47,6 +52,23 @@ export default function Profile() {
       setUsername(data.username);
     } catch (error) {
       console.error("Error fetching profile:", error);
+    }
+  };
+
+  const getUserReviews = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/reviews?action=getUserReviews`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+      const data = await res.json();
+
+      setProfileReviews(data);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
     }
   };
 
@@ -141,8 +163,33 @@ export default function Profile() {
 
           <TabsContent value="reviews">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {profileReviews.map((review, i) => (
-                <ReviewCard key={i} {...review} />
+              {profileReviews.map((review, _) => (
+                <Link
+                  to={`/reviews/${review.id}`}
+                  className="block group"
+                  key={review.id}
+                >
+                  <div className="relative rounded-2xl overflow-hidden border border-border bg-card transition-all duration-300 hover:shadow-lg hover:shadow-black/10 hover:-translate-y-1">
+                    {/* Badge pinned to top-right instead */}
+                    <div className="absolute top-3 right-3 z-10">
+                      <CategoryBadge
+                        category={review.category?.toLowerCase() as Category}
+                        size="sm"
+                      />
+                    </div>
+
+                    <ReviewCard
+                      title={review.title}
+                      name={review.name}
+                      category={review.category}
+                      rating={review.rating}
+                      description={review.description}
+                      author={review.author}
+                      likes={review.likes}
+                      comments={review.comments}
+                    />
+                  </div>
+                </Link>
               ))}
             </div>
           </TabsContent>

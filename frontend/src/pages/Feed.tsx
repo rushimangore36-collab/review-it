@@ -37,8 +37,22 @@ const suggestedUsers = [
   },
 ];
 
+type Category = "books" | "movies" | "series" | "courses";
+
 export default function Feed() {
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<
+    {
+      id: number;
+      category: Category;
+      name: string;
+      rating: number;
+      title: string;
+      description: string;
+      author: { name: string };
+      likes?: number;
+      comments?: number;
+    }[]
+  >([]);
   useEffect(() => {
     getReviews();
   }, []);
@@ -105,20 +119,29 @@ export default function Feed() {
               {reviews.map((review, _) => (
                 <Link
                   to={`/reviews/${review.id}`}
-                  className="block"
+                  className="block group"
                   key={review.id}
                 >
-                  <ReviewCard
-                    key={review.id}
-                    title={review.title}
-                    name={review.name}
-                    category={review.category}
-                    rating={review.rating}
-                    description={review.description}
-                    author={review.author}
-                    likes={review.likes}
-                    comments={review.comments}
-                  />
+                  <div className="relative rounded-2xl overflow-hidden border border-border bg-card transition-all duration-300 hover:shadow-lg hover:shadow-black/10 hover:-translate-y-1">
+                    {/* Badge pinned to top-right instead */}
+                    <div className="absolute top-3 right-3 z-10">
+                      <CategoryBadge
+                        category={review.category?.toLowerCase() as Category}
+                        size="sm"
+                      />
+                    </div>
+
+                    <ReviewCard
+                      title={review.title}
+                      name={review.name}
+                      category={review.category}
+                      rating={review.rating}
+                      description={review.description}
+                      author={review.author}
+                      likes={review.likes}
+                      comments={review.comments}
+                    />
+                  </div>
                 </Link>
               ))}
             </div>
