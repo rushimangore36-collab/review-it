@@ -35,8 +35,26 @@ export const createReview = async (req: Request, res: Response) => {
 export const getReviews = async (req: Request, res: Response) => {
   try {
     const action = req.query.action as string;
-
-    if (action === "getUserReviews") {
+    if (action === "search") {
+      const search = req.query.search as string | undefined;
+      const reviews = await prisma.review.findMany({
+        where: {
+          name: search ? { contains: search, mode: "insensitive" } : undefined,
+        },
+        select: {
+          id: true,
+          category: true,
+          name: true,
+          title: true,
+          rating: true,
+          description: true,
+          author: {
+            select: { name: true },
+          },
+        },
+      });
+      res.json(reviews);
+    } else if (action === "getUserReviews") {
       const userId = req.query.id;
       const userReviews = await prisma.review.findMany({
         where: { authorId: Number(userId) },
