@@ -78,7 +78,7 @@ export async function check(req: Request, res: Response) {
     if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    res.status(200).json({ authenticated: true });
+    res.status(200).json({ authenticated: true, id: decoded.userId });
   } catch (error) {
     res.status(401).json({ error: "Unauthorized" });
   }

@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { MapPin, Calendar, Link as LinkIcon } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 type Category = "books" | "movies" | "series" | "courses";
 
 export default function Profile() {
+  const { id } = useParams();
   const [name, setName] = useState("Sarah Chen");
   const [username, setUsername] = useState("@sarahchen");
   const [noOfReviews, setNoOfReviews] = useState(0);
@@ -44,10 +45,12 @@ export default function Profile() {
 
   const getProfile = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/profile`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/users?action=profile&id=${id}`,
+        {
+          method: "GET",
+        }
+      );
       const data = await res.json();
       setName(data.name);
       setUsername(data.username);

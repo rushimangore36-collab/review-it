@@ -3,7 +3,7 @@ import cookieparser from "cookie-parser";
 import cors from "cors";
 
 import authRouter from "./routes/authRouter";
-import profileRouter from "./routes/profileRouter";
+import userRouter from "./routes/userRouter";
 import reviewRouter from "./routes/reviewRouter";
 
 const app = express();
@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(cookieparser());
 
 app.use("/auth", authRouter);
-app.use("/profile", profileRouter);
+app.use("/users", userRouter);
 app.use("/reviews", reviewRouter);
 
 export default app;

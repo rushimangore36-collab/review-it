@@ -8,6 +8,7 @@ export function Navbar() {
   const [isDark, setIsDark] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -39,6 +40,7 @@ export function Navbar() {
       );
       const data = await res.json();
       setIsLoggedIn(data.authenticated);
+      setUserId(data.id);
     } catch (error) {
       console.error("Error checking auth status:", error);
     }
@@ -145,7 +147,7 @@ export function Navbar() {
                 </Button>
 
                 {/* Profile */}
-                <Link to="/profile">
+                <Link to={`/profile/${userId}`}>
                   <img
                     src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face"
                     alt="Profile"
