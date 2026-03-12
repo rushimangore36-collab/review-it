@@ -53,6 +53,27 @@ export default function Feed() {
       comments?: number;
     }[]
   >([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (!search) {
+      getReviews();
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const res = await fetch(
+        `${
+          import.meta.env.VITE_BACKEND_URL
+        }/reviews?action=search&search=${search}`
+      );
+      const data = await res.json();
+      setReviews(data); // ✅ was: setReviews(data) — this one was fine
+    }, 400); // debounce 400ms
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
   useEffect(() => {
     getReviews();
   }, []);
@@ -60,7 +81,7 @@ export default function Feed() {
     const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/reviews`);
     const data = await res.json();
 
-    setReviews([...reviews, ...data]);
+    setReviews(data);
   };
   return (
     <div className="min-h-screen bg-background">
@@ -72,6 +93,8 @@ export default function Feed() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search reviews, items, or people..."
               className="pl-9 rounded-xl bg-card border-border"
             />
