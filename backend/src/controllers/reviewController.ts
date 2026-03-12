@@ -37,14 +37,9 @@ export const getReviews = async (req: Request, res: Response) => {
     const action = req.query.action as string;
 
     if (action === "getUserReviews") {
-      const token = req.cookies.token;
-      if (!token) return res.status(401).json({ error: "Unauthorized" });
-      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
-        userId: number;
-      };
-      const userId = decoded.userId;
+      const userId = req.query.id;
       const userReviews = await prisma.review.findMany({
-        where: { authorId: userId },
+        where: { authorId: Number(userId) },
         select: {
           id: true,
           category: true,

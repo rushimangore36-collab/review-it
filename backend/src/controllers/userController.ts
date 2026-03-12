@@ -17,6 +17,23 @@ export default async function getProfile(req: Request, res: Response) {
         },
       });
       res.json(user);
+    } else if (action === "search") {
+      const q = req.query.q as string | undefined;
+      if (!q?.trim()) {
+        return res.json([]);
+      }
+      const users = await prisma.user.findMany({
+        where: {
+          name: { contains: q.trim(), mode: "insensitive" },
+        },
+        select: {
+          id: true,
+          username: true,
+          name: true,
+        },
+        take: 10,
+      });
+      res.json(users);
     }
   } catch (error: any) {
     res.status(400).json({ error: error.message });

@@ -34,7 +34,7 @@ export default function Profile() {
   useEffect(() => {
     getProfile();
     getUserReviews();
-  }, []);
+  }, [id]);
 
   const stats = [
     { label: "Reviews", value: noOfReviews.toString() },
@@ -62,10 +62,11 @@ export default function Profile() {
   const getUserReviews = async () => {
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/reviews?action=getUserReviews`,
+        `${
+          import.meta.env.VITE_BACKEND_URL
+        }/reviews?action=getUserReviews&id=${id}`,
         {
           method: "GET",
-          credentials: "include",
         }
       );
       const data = await res.json();
