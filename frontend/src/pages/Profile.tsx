@@ -41,7 +41,8 @@ export default function Profile() {
   const [username, setUsername] = useState("sarahchen");
   const [noOfReviews, setNoOfReviews] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [followerCount, setFollowerCount] = useState(1200);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const [profileReviews, setProfileReviews] = useState<
     {
       id: number;
@@ -57,6 +58,22 @@ export default function Profile() {
   >([]);
 
   useEffect(() => {
+    const followInfo = async () => {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/follows?action=getInfo&id=${id}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+      const data = await res.json();
+      setFollowerCount(Number(data.followers));
+      setFollowingCount(Number(data.followings));
+    };
+    followInfo();
+  }, [id]);
+
+  useEffect(() => {
     getProfile();
     getUserReviews();
   }, [id]);
@@ -69,15 +86,12 @@ export default function Profile() {
     },
     {
       label: "Followers",
-      value:
-        followerCount >= 1000
-          ? `${(followerCount / 1000).toFixed(1)}K`
-          : followerCount.toString(),
+      value: followerCount.toString(),
       icon: <UserCheck className="w-4 h-4" />,
     },
     {
       label: "Following",
-      value: "489",
+      value: followingCount.toString(),
       icon: <UserPlus className="w-4 h-4" />,
     },
     {
@@ -117,7 +131,12 @@ export default function Profile() {
     }
   };
 
-  const handleFollow = () => {
+  const handleFollow = async () => {
+    const res = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/follows?id=${id}`,
+      { method: "GET", credentials: "include" }
+    );
+    const data = await res.json();
     setIsFollowing((prev) => !prev);
     setFollowerCount((prev) => (isFollowing ? prev - 1 : prev + 1));
   };

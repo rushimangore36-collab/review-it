@@ -5,6 +5,7 @@ import cors from "cors";
 import authRouter from "./routes/authRouter";
 import userRouter from "./routes/userRouter";
 import reviewRouter from "./routes/reviewRouter";
+import followRouter from "./routes/followRouter";
 
 const app = express();
 
@@ -21,5 +22,6 @@ app.use(cookieparser());
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
 app.use("/reviews", reviewRouter);
+app.use("/follows", followRouter);
 
 export default app;
