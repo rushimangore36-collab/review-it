@@ -1,13 +1,11 @@
 import { Heart, MessageCircle, Bookmark } from "lucide-react";
 import { StarRating } from "./StarRating";
-import { CategoryBadge } from "./CategoryBadge";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 
 type Category = "books" | "movies" | "series" | "courses";
 
 interface ReviewCardProps {
-  id?: string;
+  id?: number;
   name: string;
   title: string;
   category: Category;
@@ -18,52 +16,77 @@ interface ReviewCardProps {
   comments?: number;
 }
 
+// Optimization: Define motion variants outside the component
+// to prevent re-creating the object on every render.
+const cardVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+};
+
 export function ReviewCard({
   title,
   name,
-  category,
+  category, // Prepared for conditional styling if needed
   rating,
   description,
   author,
-  likes,
-  comments,
+  likes = 0, // Optimization: Default values prevent "undefined" layout shifts
+  comments = 0, // Optimization: Default values prevent "undefined" layout shifts
 }: ReviewCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="group bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
+      variants={cardVariants}
+      initial="initial"
+      animate="animate"
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="group bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-lg hover:border-border/80 transition-all duration-300"
     >
-      <div className="p-4 space-y-3">
-        <div className="text-lg font-semibold text-white tracking-wide">
+      <div className="p-5 space-y-4">
+        {" "}
+        {/* Optimization: Increased padding for better UI breathing room */}
+        <div className="text-lg font-bold text-white tracking-tight leading-none">
           {name}
         </div>
-        <div className="flex items-start justify-between gap-2">
-          {title}
-
-          <StarRating rating={rating} size="sm" />
+        <div className="flex items-start justify-between gap-3">
+          <span className="text-sm font-medium text-muted-foreground leading-snug">
+            {title}
+          </span>
+          {/* Optimization: Flex-shrink-0 ensures the stars don't squash on small screens */}
+          <div className="flex-shrink-0">
+            <StarRating rating={rating} size="sm" />
+          </div>
         </div>
-
-        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+        <p className="text-sm text-muted-foreground/90 line-clamp-2 leading-relaxed min-h-[2.5rem]">
           {description}
         </p>
-
-        <div className="flex items-center justify-between pt-2 border-t border-border">
+        <div className="flex items-center justify-between pt-4 border-t border-border/60">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">{author.name}</span>
+            <span className="text-xs font-semibold text-foreground/80 tracking-wide">
+              {author.name}
+            </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-1 text-muted-foreground hover:text-category-movies transition-colors text-sm">
+          <div className="flex items-center gap-4">
+            <button
+              aria-label="Like"
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-rose-500 transition-colors text-xs font-medium"
+            >
               <Heart className="w-4 h-4" />
               <span>{likes}</span>
             </button>
-            <button className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors text-sm">
+
+            <button
+              aria-label="Comment"
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors text-xs font-medium"
+            >
               <MessageCircle className="w-4 h-4" />
               <span>{comments}</span>
             </button>
-            <button className="text-muted-foreground hover:text-amber-400 transition-colors">
+
+            <button
+              aria-label="Bookmark"
+              className="text-muted-foreground hover:text-amber-400 transition-colors"
+            >
               <Bookmark className="w-4 h-4" />
             </button>
           </div>
