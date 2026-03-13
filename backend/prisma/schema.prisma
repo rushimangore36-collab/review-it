@@ -14,7 +14,22 @@ model User {
   username String
   password String
   reviews Review[]
+
+  followers  Follow[] @relation("following")
+  following  Follow[] @relation("follower")
 } 
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  followerId  Int     
+  followingId Int     
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("follower",  fields: [followerId],  references: [id])
+  following User @relation("following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId]) 
+}
 
 model Review { 
   id        Int     @id @default(autoincrement()) 
