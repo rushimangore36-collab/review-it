@@ -28,6 +28,7 @@ const CATEGORIES: Category[] = ["books", "movies", "series", "courses"];
 export default function Feed() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState<Category | "all">("all");
   const [isLoading, setIsLoading] = useState(true);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -63,6 +64,16 @@ export default function Feed() {
     };
   }, [search, fetchReviews]);
 
+  // Filter reviews by active category (client-side, instant)
+  const filtered = reviews.filter(
+    (r) =>
+      activeCategory === "all" || r.category?.toLowerCase() === activeCategory
+  );
+
+  const handleCategoryClick = (cat: Category) => {
+    setActiveCategory((prev) => (prev === cat ? "all" : cat));
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
@@ -88,58 +99,97 @@ export default function Feed() {
             </Button>
           </div>
 
+          {/* Category filter pills */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
             <LayoutGrid className="w-4 h-4 mr-2 text-muted-foreground shrink-0" />
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
-                className="shrink-0 transition-transform active:scale-95"
+                onClick={() => handleCategoryClick(cat)}
+                className={`shrink-0 transition-all active:scale-95 rounded-full ${
+                  activeCategory === cat
+                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    : "opacity-60 hover:opacity-100"
+                }`}
               >
                 <CategoryBadge category={cat} size="md" />
               </button>
             ))}
+
+            {/* Show reset button when a filter is active */}
+            {activeCategory !== "all" && (
+              <button
+                onClick={() => setActiveCategory("all")}
+                className="shrink-0 text-xs text-muted-foreground underline underline-offset-2 ml-1 hover:text-foreground transition-colors"
+              >
+                Clear
+              </button>
+            )}
           </div>
         </section>
+
+        {/* Results count */}
+        {!isLoading && (
+          <p className="text-sm text-muted-foreground mb-4">
+            {filtered.length} {filtered.length === 1 ? "review" : "reviews"}
+            {activeCategory !== "all" && ` in ${activeCategory}`}
+          </p>
+        )}
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <AnimatePresence mode="popLayout">
-            {isLoading
-              ? [...Array(4)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="p-6 rounded-2xl border border-border bg-card/50 space-y-4"
+            {isLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="p-6 rounded-2xl border border-border bg-card/50 space-y-4"
+                >
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-7 w-3/4" />
+                  <Skeleton className="h-20 w-full rounded-lg" />
+                </div>
+              ))
+            ) : filtered.length === 0 ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="col-span-2 text-center py-16 text-muted-foreground"
+              >
+                <p className="text-lg font-medium">No reviews found</p>
+                <p className="text-sm mt-1">
+                  {activeCategory !== "all"
+                    ? `No ${activeCategory} reviews yet.`
+                    : "Try a different search term."}
+                </p>
+              </motion.div>
+            ) : (
+              filtered.map((review) => (
+                <motion.div
+                  key={review.id}
+                  layout
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <Link
+                    to={`/reviews/${review.id}`}
+                    className="block relative group"
                   >
-                    <Skeleton className="h-5 w-20 rounded-full" />
-                    <Skeleton className="h-7 w-3/4" />
-                    <Skeleton className="h-20 w-full rounded-lg" />
-                  </div>
-                ))
-              : reviews.map((review) => (
-                  <motion.div
-                    key={review.id}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <Link
-                      to={`/reviews/${review.id}`}
-                      className="block relative group"
-                    >
-                      <div className="absolute top-4 right-4 z-20">
-                        {/* Optimization: Force lowercase and check for existence */}
-                        {review.category && (
-                          <CategoryBadge
-                            category={review.category.toLowerCase() as Category}
-                            size="sm"
-                          />
-                        )}
-                      </div>
-                      <ReviewCard {...review} />
-                    </Link>
-                  </motion.div>
-                ))}
+                    <div className="absolute top-4 right-4 z-20">
+                      {review.category && (
+                        <CategoryBadge
+                          category={review.category.toLowerCase() as Category}
+                          size="sm"
+                        />
+                      )}
+                    </div>
+                    <ReviewCard {...review} />
+                  </Link>
+                </motion.div>
+              ))
+            )}
           </AnimatePresence>
         </div>
       </main>
