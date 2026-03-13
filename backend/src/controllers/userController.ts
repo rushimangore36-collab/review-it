@@ -34,6 +34,12 @@ export default async function getProfile(req: Request, res: Response) {
         take: 10,
       });
       res.json(users);
+    } else if (action === "me") {
+      const token = req.cookies.token;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+        userId: number;
+      };
+      res.json(decoded.userId);
     }
   } catch (error: any) {
     res.status(400).json({ error: error.message });
