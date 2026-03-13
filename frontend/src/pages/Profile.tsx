@@ -69,6 +69,7 @@ export default function Profile() {
       const data = await res.json();
       setFollowerCount(Number(data.followers));
       setFollowingCount(Number(data.followings));
+      setIsFollowing(data.state);
     };
     followInfo();
   }, [id]);
@@ -132,15 +133,22 @@ export default function Profile() {
   };
 
   const handleFollow = async () => {
-    const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/follows?id=${id}`,
-      { method: "GET", credentials: "include" }
-    );
-    const data = await res.json();
-    setIsFollowing((prev) => !prev);
-    setFollowerCount((prev) => (isFollowing ? prev - 1 : prev + 1));
-  };
+    const action = isFollowing ? "unfollow" : "follow";
 
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/follows?action=${action}&id=${id}`,
+        { method: "GET", credentials: "include" } // POST, not GET
+      );
+
+      if (!res.ok) throw new Error("Request failed");
+
+      setIsFollowing((prev) => !prev);
+      setFollowerCount((prev) => (isFollowing ? prev - 1 : prev + 1));
+    } catch (error) {
+      console.error("Follow/unfollow failed:", error);
+    }
+  };
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
