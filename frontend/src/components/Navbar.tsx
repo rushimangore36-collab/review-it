@@ -49,7 +49,7 @@ export function Navbar() {
 
   const navLinks = [
     { label: "Feed", to: "/feed" },
-    { label: "Explore", to: "/explore" },
+
     { label: "Write", to: "/write" },
   ];
 
