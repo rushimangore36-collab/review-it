@@ -70,25 +70,17 @@ export function ReviewCard({
             <button
               aria-label="Like"
               className="flex items-center gap-1.5 text-muted-foreground hover:text-rose-500 transition-colors text-xs font-medium"
-            >
-              <Heart className="w-4 h-4" />
-              <span>{likes}</span>
-            </button>
+            ></button>
 
             <button
               aria-label="Comment"
               className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors text-xs font-medium"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>{comments}</span>
-            </button>
+            ></button>
 
             <button
               aria-label="Bookmark"
               className="text-muted-foreground hover:text-amber-400 transition-colors"
-            >
-              <Bookmark className="w-4 h-4" />
-            </button>
+            ></button>
           </div>
         </div>
       </div>
