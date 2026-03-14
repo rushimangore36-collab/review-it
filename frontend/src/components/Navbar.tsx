@@ -4,18 +4,38 @@ import { Search, Bell, Moon, Sun, Menu, X, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Default avatar as inline SVG data URI — no external dependency
+const DEFAULT_AVATAR =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='20' fill='%236366f1'/%3E%3Ccircle cx='20' cy='15' r='7' fill='%23fff' opacity='.9'/%3E%3Cellipse cx='20' cy='34' rx='12' ry='9' fill='%23fff' opacity='.9'/%3E%3C/svg%3E";
+
+async function checkAuth(backendUrl) {
+  const res = await fetch(`${backendUrl}/auth/check`, {
+    method: "GET",
+    credentials: "include",
+  });
+  return res.json();
+}
+
+async function searchUsersApi(backendUrl, query) {
+  const res = await fetch(
+    `${backendUrl}/users?action=search&q=${encodeURIComponent(query)}`
+  );
+  const data = await res.json();
+  return data.users || data || [];
+}
+
 export function Navbar() {
   const [isDark, setIsDark] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userId, setUserId] = useState(0);
+  const [userId, setUserId] = useState(null);
+  const [userAvatar, setUserAvatar] = useState(null);
 
-  // Search state
+  // Search
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
 
   const searchRef = useRef(null);
   const inputRef = useRef(null);
@@ -23,28 +43,7 @@ export function Navbar() {
 
   const location = useLocation();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDark);
-  }, [isDark]);
-
-  useEffect(() => {
-    document.documentElement.classList.add("dark");
-    check();
-  }, []);
-
-  // Close search on outside click
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setSearchOpen(false);
-        setSearchQuery("");
-        setSearchResults([]);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const isLanding = location.pathname === "/";
 
@@ -54,62 +53,78 @@ export function Navbar() {
     { label: "Write", to: "/write" },
   ];
 
-  const check = async () => {
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/auth/check`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-      const data = await res.json();
-      setIsLoggedIn(data.authenticated);
-      setUserId(data.id);
-    } catch (error) {
-      console.error("Error checking auth status:", error);
-    }
+  // Sync dark mode
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+  }, [isDark]);
+
+  // Init: dark mode + auth check
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+    checkAuth(backendUrl)
+      .then((data) => {
+        setIsLoggedIn(data.authenticated);
+        setUserId(data.id ?? null);
+        setUserAvatar(data.avatar ?? null);
+      })
+      .catch(console.error);
+  }, [backendUrl]);
+
+  // Close search on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        closeSearch();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
   };
 
   const logout = async () => {
     try {
-      await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/logout`, {
+      await fetch(`${backendUrl}/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
-      setIsLoggedIn(false);
-    } catch (error) {
-      console.error("Error logging out:", error);
+    } catch (e) {
+      console.error(e);
     }
+    setIsLoggedIn(false);
     navigate("/");
   };
 
-  const searchUsers = useCallback(async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      setSearchLoading(false);
-      return;
-    }
-    setSearchLoading(true);
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/users?action=search&q=${query}`
-      );
-      const data = await res.json();
-      setSearchResults(data.users || data || []);
-    } catch (error) {
-      console.error("Search error:", error);
-      setSearchResults([]);
-    } finally {
-      setSearchLoading(false);
-    }
-  }, []);
+  const doSearch = useCallback(
+    async (query) => {
+      if (!query.trim()) {
+        setSearchResults([]);
+        setSearchLoading(false);
+        return;
+      }
+      setSearchLoading(true);
+      try {
+        const results = await searchUsersApi(backendUrl, query);
+        setSearchResults(results);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    },
+    [backendUrl]
+  );
 
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearchQuery(val);
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchUsers(val), 300);
+    debounceRef.current = setTimeout(() => doSearch(val), 300);
   };
 
   const handleSearchOpen = () => {
@@ -119,9 +134,7 @@ export function Navbar() {
 
   const handleUserSelect = (user) => {
     navigate(`/profile/${user.id}`);
-    setSearchOpen(false);
-    setSearchQuery("");
-    setSearchResults([]);
+    closeSearch();
   };
 
   const showDropdown = searchOpen && searchQuery.length > 0;
@@ -142,7 +155,7 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop navigation */}
+          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
@@ -159,14 +172,14 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Right section */}
+          {/* Right actions */}
           <div className="flex items-center gap-1.5">
             {/* Search */}
             <div ref={searchRef} className="relative">
               <AnimatePresence mode="wait">
                 {searchOpen ? (
                   <motion.div
-                    key="search-input"
+                    key="open"
                     initial={{ width: 36, opacity: 0 }}
                     animate={{ width: 220, opacity: 1 }}
                     exit={{ width: 36, opacity: 0 }}
@@ -179,8 +192,6 @@ export function Navbar() {
                       type="text"
                       value={searchQuery}
                       onChange={handleSearchChange}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => setSearchFocused(false)}
                       placeholder="Search users..."
                       className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 min-w-0"
                     />
@@ -201,7 +212,7 @@ export function Navbar() {
                   </motion.div>
                 ) : (
                   <motion.div
-                    key="search-btn"
+                    key="closed"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -218,7 +229,7 @@ export function Navbar() {
                 )}
               </AnimatePresence>
 
-              {/* Search Results Dropdown */}
+              {/* Search dropdown */}
               <AnimatePresence>
                 {showDropdown && (
                   <motion.div
@@ -231,7 +242,7 @@ export function Navbar() {
                     {searchLoading ? (
                       <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Searching...
+                        Searching…
                       </div>
                     ) : searchResults.length > 0 ? (
                       <div className="py-1.5">
@@ -247,29 +258,17 @@ export function Navbar() {
                             onClick={() => handleUserSelect(user)}
                             className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-accent/60 transition-colors text-left group"
                           >
-                            {user.avatar ? (
-                              <img
-                                src={user.avatar}
-                                alt={user.username}
-                                className="w-8 h-8 rounded-full object-cover ring-2 ring-border group-hover:ring-primary/40 transition-all shrink-0"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-border group-hover:ring-primary/40 transition-all shrink-0">
-                                <User className="w-4 h-4 text-primary/60" />
-                              </div>
-                            )}
-                            <Link to={`profile/${user.id}`}>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-                                  {user.name || user.username}
+                            <UserAvatar src={user.avatar} size={8} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                                {user.name || user.username}
+                              </p>
+                              {user.username && (
+                                <p className="text-xs text-muted-foreground truncate">
+                                  @{user.username}
                                 </p>
-                                {user.username && (
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    @{user.username}
-                                  </p>
-                                )}
-                              </div>
-                            </Link>
+                              )}
+                            </div>
                           </motion.button>
                         ))}
                       </div>
@@ -296,55 +295,37 @@ export function Navbar() {
               variant="ghost"
               size="icon"
               className="rounded-xl h-9 w-9"
-              onClick={() => setIsDark(!isDark)}
+              onClick={() => setIsDark((d) => !d)}
+              aria-label="Toggle theme"
             >
               <AnimatePresence mode="wait">
-                {isDark ? (
-                  <motion.div
-                    key="sun"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
+                <motion.div
+                  key={isDark ? "sun" : "moon"}
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {isDark ? (
                     <Sun className="w-4 h-4" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="moon"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
+                  ) : (
                     <Moon className="w-4 h-4" />
-                  </motion.div>
-                )}
+                  )}
+                </motion.div>
               </AnimatePresence>
             </Button>
 
+            {/* Auth / profile section — hidden on landing */}
             {!isLanding && (
               <>
                 {isLoggedIn ? (
                   <>
-                    {/* Notifications */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-xl h-9 w-9 hidden md:flex relative"
+                    <Link
+                      to={`/profile/${userId}`}
+                      className="shrink-0"
+                      aria-label="My profile"
                     >
-                      <Bell className="w-4 h-4" />
-                      {/* Notification dot */}
-                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
-                    </Button>
-
-                    {/* Profile */}
-                    <Link to={`/profile/${userId}`} className="shrink-0">
-                      <img
-                        src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face"
-                        alt="Profile"
-                        className="w-8 h-8 rounded-full object-cover ring-2 ring-border hover:ring-primary/50 transition-all duration-200"
-                      />
+                      <UserAvatar src={userAvatar} size={8} ring />
                     </Link>
 
                     <button
@@ -374,42 +355,35 @@ export function Navbar() {
               </>
             )}
 
-            {/* Mobile menu button */}
+            {/* Mobile hamburger */}
             <Button
               variant="ghost"
               size="icon"
               className="md:hidden rounded-xl h-9 w-9"
-              onClick={() => setMobileOpen(!mobileOpen)}
+              onClick={() => setMobileOpen((o) => !o)}
+              aria-label="Menu"
             >
               <AnimatePresence mode="wait">
-                {mobileOpen ? (
-                  <motion.div
-                    key="x"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                  >
+                <motion.div
+                  key={mobileOpen ? "x" : "menu"}
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {mobileOpen ? (
                     <X className="w-4 h-4" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="menu"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                  >
+                  ) : (
                     <Menu className="w-4 h-4" />
-                  </motion.div>
-                )}
+                  )}
+                </motion.div>
               </AnimatePresence>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -477,5 +451,42 @@ export function Navbar() {
         )}
       </AnimatePresence>
     </nav>
+  );
+}
+
+// ── Reusable avatar component ─────────────────────────────────────────────────
+function UserAvatar({ src, size = 8, ring = false }) {
+  const [errored, setErrored] = useState(false);
+  const cls = `w-${size} h-${size} rounded-full object-cover ${
+    ring
+      ? "ring-2 ring-border hover:ring-primary/50 transition-all duration-200"
+      : "ring-2 ring-border group-hover:ring-primary/40 transition-all"
+  }`;
+
+  if (src && !errored) {
+    return (
+      <img
+        src={src}
+        alt="Avatar"
+        className={cls}
+        onError={() => setErrored(true)}
+      />
+    );
+  }
+
+  // Default avatar — indigo gradient with silhouette
+  return (
+    <div
+      className={`w-${size} h-${size} rounded-full flex items-center justify-center shrink-0 ${
+        ring
+          ? "ring-2 ring-border hover:ring-primary/50 transition-all duration-200"
+          : "ring-2 ring-border group-hover:ring-primary/40 transition-all"
+      }`}
+      style={{
+        background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+      }}
+    >
+      <User className={`text-white/90 ${size <= 8 ? "w-4 h-4" : "w-5 h-5"}`} />
+    </div>
   );
 }
