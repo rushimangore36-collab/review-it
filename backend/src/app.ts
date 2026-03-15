@@ -11,8 +11,14 @@ const app = express();
 
 app.use(
   cors({
-    origin:
-      "https://review-4hakdpi0i-rushimangore36-collabs-projects.vercel.app/",
+    origin: (origin, callback) => {
+      const allowed = [/\.vercel\.app$/, /^http:\/\/localhost/];
+      if (!origin || allowed.some((pattern) => pattern.test(origin))) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
