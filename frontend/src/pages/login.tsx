@@ -14,6 +14,8 @@ export default function Login() {
     password: "",
   });
 
+  const navigate = useNavigate();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -30,7 +32,7 @@ export default function Login() {
       body: JSON.stringify(formData),
     });
     if (res.ok) {
-      window.location.href = "/feed";
+      navigate("/feed");
     }
   };
 
