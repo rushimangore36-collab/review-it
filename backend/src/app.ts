@@ -11,8 +11,12 @@ const app = express();
 
 app.use(
   cors({
-    origin:
+    origin: [
       "https://review-4hakdpi0i-rushimangore36-collabs-projects.vercel.app",
+      "https://review-it-rushimangore36-collabs-projects.vercel.app",
+      "https://review-it-git-main-rushimangore36-collabs-projects.vercel.app",
+      "https://review-flxwywu4p-rushimangore36-collabs-projects.vercel.app",
+    ],
     credentials: true,
   })
 );
