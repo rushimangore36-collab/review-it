@@ -31,6 +31,10 @@ export default function ItemDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     if (!id) return;
     const getItem = async () => {
       setLoading(true);
@@ -145,16 +149,6 @@ export default function ItemDetail() {
                   <p className="text-muted-foreground leading-relaxed text-base mb-8">
                     {item.description}
                   </p>
-
-                  {/* CTA */}
-                  <div className="flex items-center gap-3 mb-12">
-                    <Button asChild className="rounded-xl gap-2">
-                      <Link to="/write">
-                        <PenLine className="w-4 h-4" />
-                        Write a Review
-                      </Link>
-                    </Button>
-                  </div>
 
                   {/* More by this author */}
                   {authorReviews.length > 0 && (
