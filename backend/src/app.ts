@@ -11,7 +11,8 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:8080", "http://localhost:8081"],
+    origin:
+      "https://review-4hakdpi0i-rushimangore36-collabs-projects.vercel.app/",
     credentials: true,
   })
 );
