@@ -17,7 +17,7 @@ app.use(
   })
 );
 
-app.use(express.json());
+https: app.use(express.json());
 app.use(cookieparser());
 
 app.use("/auth", authRouter);
