@@ -2,7 +2,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ReviewCard } from "@/components/ReviewCard";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   UserPlus,
   UserCheck,
@@ -13,6 +13,9 @@ import {
   Tv,
   GraduationCap,
   TrendingUp,
+  Trash2,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useState, useCallback, useMemo } from "react";
@@ -71,6 +74,163 @@ const CATEGORY_META: Record<
   },
 };
 
+// ── Default Avatar ──────────────────────────────────────────────────────────
+function DefaultAvatar({
+  name,
+  className,
+}: {
+  name: string;
+  className?: string;
+}) {
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0].toUpperCase())
+    .join("");
+
+  // Deterministic hue from name string
+  const hue =
+    name.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % 360;
+
+  return (
+    <div
+      className={className}
+      style={{
+        background: `linear-gradient(135deg, hsl(${hue},60%,55%) 0%, hsl(${
+          (hue + 40) % 360
+        },70%,45%) 100%)`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#fff",
+        fontWeight: 700,
+        fontSize: "clamp(1rem, 4vw, 1.5rem)",
+        letterSpacing: "0.05em",
+        userSelect: "none",
+      }}
+    >
+      {initials || "?"}
+    </div>
+  );
+}
+
+// ── Avatar with fallback ─────────────────────────────────────────────────────
+function ProfileAvatar({
+  src,
+  name,
+  className,
+}: {
+  src?: string;
+  name: string;
+  className?: string;
+}) {
+  const [imgError, setImgError] = useState(false);
+
+  if (!src || imgError) {
+    return <DefaultAvatar name={name} className={className} />;
+  }
+
+  return (
+    <img
+      src={src}
+      alt={name}
+      className={className}
+      onError={() => setImgError(true)}
+    />
+  );
+}
+
+// ── Delete Confirmation Modal ────────────────────────────────────────────────
+function DeleteConfirmModal({
+  reviewTitle,
+  onConfirm,
+  onCancel,
+  isDeleting,
+}: {
+  reviewTitle: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isDeleting: boolean;
+}) {
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ backdropFilter: "blur(6px)", background: "rgba(0,0,0,0.45)" }}
+        onClick={onCancel}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.88, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.88, y: 20 }}
+          transition={{ type: "spring", stiffness: 380, damping: 28 }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-sm rounded-2xl border border-border bg-card shadow-2xl overflow-hidden"
+        >
+          {/* Red accent stripe */}
+          <div className="h-1 w-full bg-gradient-to-r from-red-500 via-rose-400 to-red-600" />
+
+          <div className="px-6 pt-6 pb-5">
+            {/* Icon */}
+            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/40 mb-4 mx-auto">
+              <AlertTriangle className="w-6 h-6 text-red-500" />
+            </div>
+
+            {/* Text */}
+            <h3 className="text-center font-semibold text-lg mb-1 text-foreground">
+              Delete Review
+            </h3>
+            <p className="text-center text-sm text-muted-foreground leading-relaxed">
+              Are you sure you want to delete{" "}
+              <span className="font-medium text-foreground">
+                &ldquo;{reviewTitle}&rdquo;
+              </span>
+              ? This action cannot be undone.
+            </p>
+
+            {/* Actions */}
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={onCancel}
+                disabled={isDeleting}
+                className="flex-1 h-10 rounded-xl border border-border bg-muted/50 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                disabled={isDeleting}
+                className="flex-1 h-10 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-all shadow-sm shadow-red-500/25 hover:shadow-red-500/40 disabled:opacity-70 flex items-center justify-center gap-1.5"
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Close X */}
+          <button
+            onClick={onCancel}
+            className="absolute top-3 right-3 p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 export default function Profile() {
   const { id } = useParams<{ id: string }>();
 
@@ -86,6 +246,10 @@ export default function Profile() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
+
+  // Delete state
+  const [deleteTarget, setDeleteTarget] = useState<Review | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const isOwnProfile = currentUserId !== null && String(currentUserId) === id;
 
@@ -187,6 +351,26 @@ export default function Profile() {
     }
   };
 
+  // ── Delete handler ────────────────────────────────────────────────────────
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/reviews?id=${deleteTarget.id}`,
+        { method: "DELETE", credentials: "include" }
+      );
+      if (!res.ok) throw new Error("Delete failed");
+      // Optimistically remove from list
+      setProfileReviews((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+    } catch (error) {
+      console.error("Delete failed:", error);
+    } finally {
+      setDeletingId(null);
+      setDeleteTarget(null);
+    }
+  };
+
   const categoryCounts = useMemo(() => {
     const counts: Partial<Record<Category, number>> = {};
     for (const r of profileReviews) {
@@ -226,6 +410,16 @@ export default function Profile() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <DeleteConfirmModal
+          reviewTitle={deleteTarget.title}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
+          isDeleting={deletingId === deleteTarget.id}
+        />
+      )}
+
       {/* Banner */}
       <div className="relative h-48 sm:h-60 overflow-hidden">
         <img
@@ -252,9 +446,8 @@ export default function Profile() {
               transition={{ delay: 0.1, duration: 0.3 }}
               className="relative flex-shrink-0"
             >
-              <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&h=160&fit=crop&crop=face"
-                alt={name}
+              <ProfileAvatar
+                name={name || "User"}
                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-4 border-background shadow-xl ring-1 ring-border"
               />
               <span className="absolute bottom-2 right-2 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
@@ -490,29 +683,64 @@ export default function Profile() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredReviews.map((review, i) => (
-                <motion.div
-                  key={review.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.04, duration: 0.3 }}
-                >
-                  <Link to={`/reviews/${review.id}`} className="block group">
-                    <div className="rounded-2xl overflow-hidden border border-border bg-card transition-all duration-300 hover:shadow-lg hover:shadow-black/10 hover:-translate-y-1 hover:border-primary/20">
-                      <ReviewCard
-                        title={review.title}
-                        name={review.name}
-                        category={review.category}
-                        rating={review.rating}
-                        description={review.description}
-                        author={review.author}
-                        likes={review.likes}
-                        comments={review.comments}
-                      />
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+              <AnimatePresence mode="popLayout">
+                {filteredReviews.map((review, i) => (
+                  <motion.div
+                    key={review.id}
+                    layout
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -8 }}
+                    transition={{ delay: i * 0.04, duration: 0.3 }}
+                    className="relative group"
+                  >
+                    {/* ── Delete Button (own profile only) ── */}
+                    {isOwnProfile && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDeleteTarget(review);
+                        }}
+                        className="
+                          absolute top-2.5 right-2.5 z-20
+                          opacity-0 group-hover:opacity-100
+                          flex items-center gap-1.5
+                          px-2.5 py-1.5 rounded-xl
+                          bg-white/90 dark:bg-zinc-900/90
+                          border border-red-200 dark:border-red-900/60
+                          text-red-500 dark:text-red-400
+                          text-xs font-semibold
+                          shadow-lg shadow-red-500/10
+                          hover:bg-red-500 hover:text-white hover:border-red-500
+                          dark:hover:bg-red-500 dark:hover:text-white
+                          transition-all duration-200
+                          backdrop-blur-sm
+                        "
+                        aria-label="Delete review"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Delete
+                      </button>
+                    )}
+
+                    <Link to={`/reviews/${review.id}`} className="block">
+                      <div className="rounded-2xl overflow-hidden border border-border bg-card transition-all duration-300 hover:shadow-lg hover:shadow-black/10 hover:-translate-y-1 hover:border-primary/20">
+                        <ReviewCard
+                          title={review.title}
+                          name={review.name}
+                          category={review.category}
+                          rating={review.rating}
+                          description={review.description}
+                          author={review.author}
+                          likes={review.likes}
+                          comments={review.comments}
+                        />
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </motion.div>

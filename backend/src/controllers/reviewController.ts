@@ -116,3 +116,21 @@ export const getReviewById = async (req: Request, res: Response) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+export async function deleteReview(req: Request, res: Response) {
+  const { id } = req.query;
+
+  if (!id) return res.status(400).json({ error: "Review ID is required" });
+
+  try {
+    await prisma.review.delete({
+      where: {
+        id: Number(id),
+      },
+    });
+    res.status(200).json({ message: "Review deleted successfully" });
+  } catch (error) {
+    console.error("Delete review error:", error);
+    res.status(500).json({ error: "Failed to delete review" });
+  }
+}

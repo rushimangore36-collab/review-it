@@ -4,115 +4,69 @@ import { StarRating } from "@/components/StarRating";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { ReviewCard } from "@/components/ReviewCard";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { Bookmark, Share2, PenLine } from "lucide-react";
+import { PenLine, User, ArrowLeft } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
-const ratingBreakdown = [
-  { stars: 5, count: 1842, pct: 62 },
-  { stars: 4, count: 720, pct: 24 },
-  { stars: 3, count: 268, pct: 9 },
-  { stars: 2, count: 98, pct: 3 },
-  { stars: 1, count: 42, pct: 2 },
-];
+type Category = "books" | "movies" | "series" | "courses";
 
-const userReviews = [
-  {
-    coverImage:
-      "https://images.unsplash.com/photo-1534809027769-b00d750a6bac?w=600&h=340&fit=crop",
-    title: "A cinematic triumph that redefines sci-fi",
-    category: "movies" as const,
-    rating: 5,
-    reviewText:
-      "Villeneuve proves once again that he's the master of epic sci-fi. Every frame is a painting, and the emotional depth of the story surpasses the previous installments.",
-    author: {
-      name: "Sarah Chen",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
-    },
-    likes: 234,
-    comments: 45,
-  },
-  {
-    coverImage:
-      "https://images.unsplash.com/photo-1534809027769-b00d750a6bac?w=600&h=340&fit=crop",
-    title: "Good but not as good as Part Two",
-    category: "movies" as const,
-    rating: 4,
-    reviewText:
-      "While the visuals are incredible and the performances strong, I felt the pacing lagged in the middle. Still a must-watch and a fitting conclusion.",
-    author: {
-      name: "Marcus Johnson",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
-    },
-    likes: 189,
-    comments: 32,
-  },
-];
-
-const similar = [
-  {
-    title: "Blade Runner 2049",
-    cover:
-      "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=200&h=280&fit=crop",
-    rating: 4.5,
-  },
-  {
-    title: "Arrival",
-    cover:
-      "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=200&h=280&fit=crop",
-    rating: 4.6,
-  },
-  {
-    title: "Interstellar",
-    cover:
-      "https://images.unsplash.com/photo-1462332420958-a05d1e002413?w=200&h=280&fit=crop",
-    rating: 4.8,
-  },
-  {
-    title: "Tenet",
-    cover:
-      "https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&h=280&fit=crop",
-    rating: 4.0,
-  },
-];
+interface ReviewItem {
+  id: number;
+  category: Category;
+  name: string;
+  title: string;
+  rating: number;
+  description: string;
+  author: { id: number; name: string; username: string } | null;
+  likes?: number;
+  comments?: number;
+}
 
 export default function ItemDetail() {
-  const [item, setItem] = useState({
-    id: 0,
-    category: "test",
-    name: "test",
-    title: "test",
-    rating: 0,
-    description: "test description",
-    author: null,
-  });
-
   const { id } = useParams();
+  const [item, setItem] = useState<ReviewItem | null>(null);
+  const [authorReviews, setAuthorReviews] = useState<ReviewItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!id) return;
     const getItem = async () => {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/reviews/${id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/reviews/${id}`,
+          { method: "GET", headers: { "Content-Type": "application/json" } }
+        );
+        const data = await res.json();
+        setItem(data);
+
+        // Fetch more reviews by the same author
+        if (data?.author?.id) {
+          const r2 = await fetch(
+            `${
+              import.meta.env.VITE_BACKEND_URL
+            }/reviews?action=getUserReviews&id=${data.author.id}`,
+            { method: "GET" }
+          );
+          const authorData = await r2.json();
+          // Exclude current review
+          setAuthorReviews(
+            Array.isArray(authorData)
+              ? authorData
+                  .filter((r: ReviewItem) => String(r.id) !== id)
+                  .slice(0, 3)
+              : []
+          );
         }
-      );
-      const data = await res.json();
-
-      await setItem(data);
+      } catch (err) {
+        console.error("Error fetching item:", err);
+      } finally {
+        setLoading(false);
+      }
     };
-
-    if (id) {
-      getItem();
-    }
+    getItem();
   }, [id]);
 
   return (
@@ -120,155 +74,254 @@ export default function ItemDetail() {
       <Navbar />
 
       {/* Hero Banner */}
-      <div className="relative h-[40vh] sm:h-[50vh] overflow-hidden">
+      <div className="relative h-[35vh] sm:h-[45vh] overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1534809027769-b00d750a6bac?w=1400&h=600&fit=crop"
-          alt="Dune: Part Three"
+          src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1400&h=600&fit=crop"
+          alt="banner"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
       </div>
 
-      <div className="container mx-auto px-4 -mt-32 relative z-10 pb-12">
+      <div className="container mx-auto px-4 -mt-28 relative z-10 pb-16 max-w-5xl">
+        {/* Back link */}
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-6"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to feed
+        </Link>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Info */}
+          {/* ── Main content ── */}
           <div className="lg:col-span-2">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
             >
-              <div className="flex items-center gap-3 mb-3">
-                {/* <CategoryBadge
-                  category={item ? (item.category as any) : "movies"}
-                  size="md"
-                /> */}
-                <span className="text-sm text-muted-foreground">2026</span>
-                {item?.author && (
-                  <span className="text-sm text-muted-foreground">
-                    By {item.author.name}
-                  </span>
-                )}
-              </div>
-
-              <h1 className="font-display text-4xl sm:text-5xl font-bold mb-4">
-                {item ? item.name : "Loading..."}
-              </h1>
-              <p className="text-muted-foreground text-lg mb-2">
-                {item ? item.title : ""}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <StarRating rating={item ? item.rating : 0} size="md" />
-                  <span className="font-semibold text-lg">
-                    {item ? item.rating : 0}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    (reviews)
-                  </span>
+              {loading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-5 w-24 rounded-full" />
+                  <Skeleton className="h-10 w-3/4" />
+                  <Skeleton className="h-5 w-1/2" />
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-32 w-full rounded-xl" />
                 </div>
-              </div>
+              ) : item ? (
+                <>
+                  {/* Category + author meta */}
+                  <div className="flex items-center gap-3 mb-4 flex-wrap">
+                    <CategoryBadge category={item.category} size="md" />
+                    {item.author && (
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <User className="w-3.5 h-3.5" />
+                        {item.author.name}
+                      </div>
+                    )}
+                  </div>
 
-              <div className="flex flex-wrap gap-2 mb-6">
-                {["Sci-Fi", "Epic", "Drama", "Action", "Adaptation"].map(
-                  (tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="rounded-full"
-                    >
-                      {tag}
-                    </Badge>
-                  )
-                )}
-              </div>
+                  {/* Title */}
+                  <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2 leading-tight">
+                    {item.name}
+                  </h1>
 
-              <p className="text-muted-foreground leading-relaxed mb-8">
-                {item ? item.description : "Loading description..."}
-              </p>
+                  {/* Review title */}
+                  {item.title && item.title !== item.name && (
+                    <p className="text-muted-foreground text-base mb-4 italic">
+                      "{item.title}"
+                    </p>
+                  )}
 
-              <div className="flex items-center gap-3 mb-12">
-                <Button
-                  asChild
-                  className="rounded-xl gradient-primary text-primary-foreground border-0 gap-2"
-                >
-                  <Link to="/write">
-                    <PenLine className="w-4 h-4" /> Write Review
-                  </Link>
-                </Button>
-                <Button variant="outline" className="rounded-xl gap-2">
-                  <Bookmark className="w-4 h-4" /> Save
-                </Button>
-                <Button variant="outline" size="icon" className="rounded-xl">
-                  <Share2 className="w-4 h-4" />
-                </Button>
-              </div>
+                  {/* Rating */}
+                  <div className="flex items-center gap-2 mb-6">
+                    <StarRating rating={item.rating} size="md" />
+                    <span className="font-semibold text-lg">{item.rating}</span>
+                    <span className="text-sm text-muted-foreground">/ 5</span>
+                  </div>
 
-              {/* Reviews */}
-              <h2 className="font-display text-2xl font-bold mb-6">
-                User Reviews
-              </h2>
-              <div className="space-y-4">
-                {userReviews.map((review, i) => (
-                  <ReviewCard name={""} description={""} key={i} {...review} />
-                ))}
-              </div>
+                  {/* Description */}
+                  <p className="text-muted-foreground leading-relaxed text-base mb-8">
+                    {item.description}
+                  </p>
+
+                  {/* CTA */}
+                  <div className="flex items-center gap-3 mb-12">
+                    <Button asChild className="rounded-xl gap-2">
+                      <Link to="/write">
+                        <PenLine className="w-4 h-4" />
+                        Write a Review
+                      </Link>
+                    </Button>
+                  </div>
+
+                  {/* More by this author */}
+                  {authorReviews.length > 0 && (
+                    <>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="font-semibold text-base">
+                          More by{" "}
+                          <Link
+                            to={`/profile/${item.author?.id}`}
+                            className="text-primary hover:underline"
+                          >
+                            {item.author?.name}
+                          </Link>
+                        </h2>
+                        <Link
+                          to={`/profile/${item.author?.id}`}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          View all →
+                        </Link>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {authorReviews.map((review, i) => (
+                          <motion.div
+                            key={review.id}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              delay: 0.1 + i * 0.07,
+                              duration: 0.3,
+                            }}
+                          >
+                            <Link
+                              to={`/reviews/${review.id}`}
+                              className="block group"
+                            >
+                              <div className="rounded-2xl overflow-hidden border border-border bg-card transition-all duration-300 hover:shadow-lg hover:shadow-black/10 hover:-translate-y-1 hover:border-primary/20">
+                                <ReviewCard
+                                  title={review.title}
+                                  name={review.name}
+                                  category={review.category}
+                                  rating={review.rating}
+                                  description={review.description}
+                                  author={review.author ?? { name: "" }}
+                                  likes={review.likes}
+                                  comments={review.comments}
+                                />
+                              </div>
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 rounded-2xl border border-dashed border-border text-muted-foreground">
+                  <p className="font-medium text-foreground text-sm mb-1">
+                    Review not found
+                  </p>
+                  <p className="text-xs">This review may have been removed.</p>
+                </div>
+              )}
             </motion.div>
           </div>
 
-          {/* Sidebar */}
-          <aside className="space-y-6">
-            {/* Rating Breakdown */}
+          {/* ── Sidebar ── */}
+          <aside className="space-y-5">
+            {/* Author card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.15, duration: 0.35 }}
               className="p-5 rounded-2xl bg-card border border-border"
             >
-              <h3 className="font-display font-semibold mb-4">
-                Rating Breakdown
+              <h3 className="font-semibold text-sm mb-4 text-muted-foreground uppercase tracking-wider">
+                Reviewer
               </h3>
-              <div className="space-y-3">
-                {ratingBreakdown.map((r) => (
-                  <div key={r.stars} className="flex items-center gap-3">
-                    <span className="text-sm w-3 text-right">{r.stars}</span>
-                    <StarRating rating={r.stars} size="sm" />
-                    <Progress value={r.pct} className="flex-1 h-2" />
-                    <span className="text-xs text-muted-foreground w-8 text-right">
-                      {r.pct}%
-                    </span>
+              {loading ? (
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-3 w-20" />
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : item?.author ? (
+                <Link
+                  to={`/profile/${item.author.id}`}
+                  className="flex items-center gap-3 group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm flex-shrink-0">
+                    {item.author.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm group-hover:text-primary transition-colors truncate">
+                      {item.author.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      @{item.author.username}
+                    </p>
+                  </div>
+                </Link>
+              ) : (
+                <p className="text-sm text-muted-foreground">Unknown author</p>
+              )}
             </motion.div>
 
-            {/* Similar */}
+            {/* Review meta */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="p-5 rounded-2xl bg-card border border-border"
+              transition={{ delay: 0.22, duration: 0.35 }}
+              className="p-5 rounded-2xl bg-card border border-border space-y-4"
             >
-              <h3 className="font-display font-semibold mb-4">
-                If You Liked This
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">
+                Details
               </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {similar.map((item) => (
-                  <Link key={item.title} to="/item/1" className="group">
-                    <div className="aspect-[3/4] rounded-xl overflow-hidden mb-2">
-                      <img
-                        src={item.cover}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+              {loading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ) : item ? (
+                <dl className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <dt className="text-muted-foreground">Category</dt>
+                    <dd>
+                      <CategoryBadge category={item.category} size="sm" />
+                    </dd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <dt className="text-muted-foreground">Rating</dt>
+                    <dd className="flex items-center gap-1.5 font-medium">
+                      <StarRating rating={item.rating} size="sm" />
+                      {item.rating}/5
+                    </dd>
+                  </div>
+                  {item.author && (
+                    <div className="flex justify-between items-center">
+                      <dt className="text-muted-foreground">Reviewed by</dt>
+                      <dd className="font-medium">{item.author.name}</dd>
                     </div>
-                    <p className="text-xs font-medium line-clamp-1">
-                      {item.title}
-                    </p>
-                    <StarRating rating={Math.round(item.rating)} size="sm" />
-                  </Link>
-                ))}
-              </div>
+                  )}
+                </dl>
+              ) : null}
+            </motion.div>
+
+            {/* Write review CTA card */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 0.35 }}
+              className="p-5 rounded-2xl border border-dashed border-border bg-card/50 text-center"
+            >
+              <PenLine className="w-6 h-6 mx-auto mb-2 text-muted-foreground opacity-50" />
+              <p className="text-sm font-medium mb-1">Have an opinion?</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                Share your own take on {item?.name ?? "this"}.
+              </p>
+              <Button asChild size="sm" className="rounded-xl w-full gap-1.5">
+                <Link to="/write">
+                  <PenLine className="w-3.5 h-3.5" />
+                  Write a Review
+                </Link>
+              </Button>
             </motion.div>
           </aside>
         </div>
