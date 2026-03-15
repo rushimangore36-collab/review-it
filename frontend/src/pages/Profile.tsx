@@ -339,7 +339,7 @@ export default function Profile() {
     try {
       const res = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/follows?action=${action}&id=${id}`,
-        { method: "POST", credentials: "include" }
+        { method: "GET", credentials: "include" }
       );
       if (!res.ok) throw new Error("Request failed");
     } catch (error) {

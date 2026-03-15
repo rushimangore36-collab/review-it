@@ -13,16 +13,15 @@ export default function Login() {
     email: "",
     password: "",
   });
-  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, {
+    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -30,7 +29,9 @@ export default function Login() {
       },
       body: JSON.stringify(formData),
     });
-    navigate("/feed");
+    if (res.ok) {
+      window.location.href = "/feed";
+    }
   };
 
   return (
