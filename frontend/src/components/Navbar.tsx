@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, Bell, Moon, Sun, Menu, X, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
 
 // Default avatar as inline SVG data URI — no external dependency
 const DEFAULT_AVATAR =
@@ -144,17 +145,17 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 gap-3">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shadow-md">
-              <span className="text-sm font-bold text-primary-foreground">
-                R
-              </span>
-            </div>
-            <span className="font-display font-bold text-lg tracking-tight">
-              ReviewIt
-            </span>
+          <Link
+            to="/"
+            className="flex items-center shrink-0"
+            style={{
+              fontSize: 26,
+              fontWeight: 700,
+              color: "white",
+            }}
+          >
+            <span className="text-gradient">Review•</span>It
           </Link>
-
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
