@@ -17,6 +17,7 @@ app.use(
       "https://review-it-git-main-rushimangore36-collabs-projects.vercel.app",
       "https://review-flxwywu4p-rushimangore36-collabs-projects.vercel.app",
       "https://review-it-theta.vercel.app",
+      "http://localhost:8080",
     ],
     credentials: true,
   })
