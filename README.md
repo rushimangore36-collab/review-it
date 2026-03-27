@@ -129,12 +129,11 @@ http://localhost:5000
 ## Core Features
 
 * User authentication (JWT-based)
-* Create, update, delete reviews
+* Create, delete reviews
 * Rating aggregation system
 * Category-based filtering
 * Search functionality
-* Follow users (planned/optional)
-* Personalized recommendation system (planned)
+* Follow users
 
 ---
 
@@ -145,15 +144,4 @@ http://localhost:5000
 * Rating
 * Content (Book, Movie, Series, Course)
 * Category
-* Lists (Watchlist, Reading list, etc.)
 
----
-
-## Future Improvements
-
-* Advanced recommendation engine
-* AI-based review insights
-* Notification system
-* Admin moderation dashboard
-* Performance optimization and caching
-* Deployment (Docker + CI/CD)
