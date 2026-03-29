@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Sparkles,
   Clock,
+  Shuffle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -85,6 +86,9 @@ export default function Feed() {
   const [isLoading, setIsLoading] = useState(true);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  const shuffle = () =>
+    setReviews((prev) => [...prev].sort(() => Math.random() - 0.5));
+
   const fetchReviews = useCallback(async (searchTerm?: string) => {
     setIsLoading(true);
     try {
@@ -96,7 +100,12 @@ export default function Feed() {
         : `${baseUrl}/reviews`;
       const res = await fetch(url);
       const data = await res.json();
-      setReviews(Array.isArray(data) ? data : []);
+      if (Array.isArray(data)) {
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        setReviews(shuffled);
+      } else {
+        setReviews([]);
+      }
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
