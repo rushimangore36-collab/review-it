@@ -175,7 +175,7 @@ export default function Feed() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search reviews, titles, authors…"
+                placeholder="Search reviews"
                 className="pl-10 rounded-xl bg-background border-border h-11 text-sm focus-visible:ring-1"
               />
             </div>
@@ -211,61 +211,6 @@ export default function Feed() {
             );
           })}
         </motion.div>
-
-        {/* ── Toolbar: results count + sort ── */}
-        <div className="flex items-center justify-between mb-5">
-          <AnimatePresence mode="wait">
-            {!isLoading && (
-              <motion.p
-                key={`${filtered.length}-${activeCategory}-${search}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-xs text-muted-foreground"
-              >
-                {filtered.length === 0
-                  ? "No results"
-                  : `${filtered.length} ${
-                      filtered.length === 1 ? "review" : "reviews"
-                    }${
-                      activeCategory !== "all" ? ` in ${activeCategory}` : ""
-                    }${search ? ` for "${search}"` : ""}`}
-              </motion.p>
-            )}
-          </AnimatePresence>
-
-          {/* Sort toggle */}
-          <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1">
-            {(
-              [
-                {
-                  key: "recent",
-                  label: "Recent",
-                  icon: <Clock className="w-3 h-3" />,
-                },
-                {
-                  key: "top",
-                  label: "Top rated",
-                  icon: <TrendingUp className="w-3 h-3" />,
-                },
-              ] as { key: SortKey; label: string; icon: React.ReactNode }[]
-            ).map((s) => (
-              <button
-                key={s.key}
-                onClick={() => setSort(s.key)}
-                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all duration-150 ${
-                  sort === s.key
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {s.icon}
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* ── Grid ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
