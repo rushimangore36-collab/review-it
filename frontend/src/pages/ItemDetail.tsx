@@ -90,7 +90,7 @@ export default function ItemDetail() {
       <div className="container mx-auto px-4 -mt-28 relative z-10 pb-16 max-w-5xl">
         {/* Back link */}
         <Link
-          to="/"
+          to="/feed"
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
